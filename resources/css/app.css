@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+
+@theme {
+  /* Colores del proyecto */
+  --color-trigo:        #C8A96E;
+  --color-trigo-light:  #E8D5A3;
+  --color-trigo-dark:   #A07840;
+  --color-corteza:      #6B4226;
+  --color-corteza-dark: #4A2D18;
+  --color-masa:         #F5EDD6;
+  --color-masa-dark:    #EAD9B8;
+  --color-miga:         #FDFAF3;
+  --color-verde:        #2C5F2E;
+  --color-verde-dark:   #1E4520;
+  --color-verde-light:  #EAF3EB;
+
+  /* Tipografías */
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-sans:    "DM Sans", system-ui, sans-serif;
+
+  /* Radios personalizados */
+  --radius-xl:  1rem;
+  --radius-2xl: 1.5rem;
+}
+
+@layer base {
+  body {
+    @apply bg-masa text-corteza antialiased font-sans;
+  }
+  h1, h2, h3 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  /* Botón primario (trigo dorado) */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-trigo hover:bg-trigo-dark text-corteza-dark
+           font-medium text-sm px-5 py-2.5 rounded-xl
+           transition-all duration-200 shadow-sm hover:shadow-md
+           focus:outline-none focus:ring-2 focus:ring-trigo focus:ring-offset-2;
+  }
+
+  /* Botón secundario */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-miga hover:bg-masa-dark text-corteza
+           font-medium text-sm px-5 py-2.5 rounded-xl border border-trigo-light
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-trigo focus:ring-offset-2;
+  }
+
+  /* Botón verde SENA */
+  .btn-verde {
+    @apply inline-flex items-center justify-center gap-2
+           bg-verde hover:bg-verde-dark text-white
+           font-medium text-sm px-5 py-2.5 rounded-xl
+           transition-all duration-200 shadow-sm
+           focus:outline-none focus:ring-2 focus:ring-verde focus:ring-offset-2;
+  }
+
+  /* Botón peligro */
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2
+           bg-red-600 hover:bg-red-700 text-white
+           font-medium text-sm px-5 py-2.5 rounded-xl
+           transition-all duration-200;
+  }
+
+  /* Input estándar */
+  .input {
+    @apply w-full rounded-xl border border-trigo-light bg-miga
+           px-4 py-2.5 text-sm text-corteza placeholder-corteza/40
+           focus:border-trigo focus:ring-2 focus:ring-trigo/20
+           transition-colors duration-150;
+  }
+
+  /* Label */
+  .label {
+    @apply block text-xs font-medium text-corteza/70 mb-1.5 uppercase tracking-wide;
+  }
+
+  /* Card base */
+  .card {
+    @apply bg-miga rounded-2xl border border-trigo-light/60 shadow-sm;
+  }
+
+  /* Badge de estado */
+  .badge-activo    { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-verde-light text-verde; }
+  .badge-proceso   { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700; }
+  .badge-completo  { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700; }
+  .badge-inactivo  { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500; }
+
+  /* Alert */
+  .alert-success { @apply flex gap-3 p-4 rounded-xl bg-verde-light border border-verde/20 text-verde text-sm; }
+  .alert-warning { @apply flex gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm; }
+  .alert-error   { @apply flex gap-3 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm; }
+  .alert-info    { @apply flex gap-3 p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-sm; }
+}

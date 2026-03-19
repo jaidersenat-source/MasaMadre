@@ -1,0 +1,224 @@
+ .auth-photo-bg {
+    background-image: url('https://images.unsplash.com/photo-1509440159596-0249088772ff?w=1000&q=85');
+    background-size: cover;
+    background-position: center;
+    transform: scale(1.04);
+    animation: authZoom 20s ease-in-out infinite alternate;
+  }
+  @keyframes authZoom {
+    from { transform: scale(1.04); }
+    to   { transform: scale(1.0); }
+  }
+  @keyframes authFadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .auth-fadein {
+    animation: authFadeUp .6s ease both;
+  }
+
+  /* Input oscuro para este layout */
+  .auth-input {
+    width: 100%;
+    background: rgba(253,250,243,.04);
+    border: 1px solid rgba(200,169,110,.16);
+    border-radius: 12px;
+    padding: .75rem 1rem;
+    font-size: .875rem;
+    font-weight: 300;
+    color: var(--color-masa);
+    outline: none;
+    transition: border-color .2s, background .2s, box-shadow .2s;
+    font-family: inherit;
+  }
+  .auth-input::placeholder {
+    color: var(--color-masa);
+    opacity: .2;
+  }
+  .auth-input:focus {
+    border-color: rgba(200,169,110,.48);
+    background: rgba(200,169,110,.05);
+    box-shadow: 0 0 0 3px rgba(200,169,110,.08);
+  }
+  .auth-input.is-error {
+    border-color: rgba(239,68,68,.4);
+  }
+  .auth-input.is-error:focus {
+    box-shadow: 0 0 0 3px rgba(239,68,68,.08);
+  }
+
+  /* Label monospace */
+  .auth-label {
+    display: block;
+    font-size: .6rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    font-family: 'DM Mono', ui-monospace, monospace;
+    color: var(--color-trigo-light);
+    opacity: .5;
+    margin-bottom: .55rem;
+  }
+
+  /* Botón submit oscuro */
+  .auth-btn-submit {
+    width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: .55rem;
+    background: var(--color-verde);
+    color: white;
+    font-size: .875rem;
+    font-weight: 500;
+    padding: .85rem 1.5rem;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: .02em;
+    transition: background .2s, transform .2s, box-shadow .2s;
+    box-shadow: 0 4px 24px rgba(44,95,46,.28);
+    font-family: inherit;
+    position: relative; overflow: hidden;
+  }
+  .auth-btn-submit::before {
+    content:'';
+    position:absolute;inset:0;
+    background:linear-gradient(135deg,rgba(255,255,255,.08) 0%,transparent 60%);
+    pointer-events:none;
+  }
+  .auth-btn-submit:hover {
+    background: var(--color-verde-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(44,95,46,.38);
+  }
+  .auth-btn-submit:active { transform: translateY(0); }
+  .auth-btn-submit:disabled {
+    opacity: .65; cursor: not-allowed; transform: none;
+  }
+
+  /* Checkbox oscuro */
+  .auth-checkbox {
+    appearance: none; -webkit-appearance: none;
+    width: 16px; height: 16px; flex-shrink: 0;
+    border-radius: 5px;
+    border: 1.5px solid rgba(200,169,110,.22);
+    background: rgba(253,250,243,.03);
+    cursor: pointer;
+    position: relative;
+    transition: background .2s, border-color .2s;
+  }
+  .auth-checkbox:checked {
+    background: var(--color-trigo);
+    border-color: var(--color-trigo);
+  }
+  .auth-checkbox:checked::after {
+    content:'';
+    position:absolute; top:2px; left:4.5px;
+    width:5px; height:8px;
+    border:1.5px solid var(--color-corteza);
+    border-top:none; border-left:none;
+    transform:rotate(42deg);
+  }
+
+  /* Role pills */
+  .auth-role-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: .55rem;
+    margin-bottom: 1.5rem;
+  }
+  .auth-role-pill {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .6rem .8rem;
+    border-radius: 12px;
+    border: 1.5px solid rgba(200,169,110,.12);
+    background: rgba(253,250,243,.02);
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    user-select: none;
+  }
+  .auth-role-pill:hover {
+    border-color: rgba(200,169,110,.28);
+    background: rgba(200,169,110,.04);
+  }
+  .auth-role-pill.is-active {
+    border-color: rgba(200,169,110,.45);
+    background: rgba(200,169,110,.08);
+  }
+  .auth-role-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .auth-role-icon.baker { background: rgba(200,169,110,.12); }
+  .auth-role-icon.coord { background: rgba(44,95,46,.15); }
+  .auth-role-icon svg { width:14px; height:14px; stroke-width:1.8; fill:none; }
+  .auth-role-icon.baker svg { stroke: var(--color-trigo); }
+  .auth-role-icon.coord svg { stroke: #4ade80; }
+  .auth-role-text strong {
+    display:block; font-size:.75rem; font-weight:500;
+    color:var(--color-masa); opacity:.75;
+  }
+  .auth-role-text small {
+    font-size:.55rem; letter-spacing:.08em; text-transform:uppercase;
+    font-family:'DM Mono',monospace;
+    color:var(--color-masa); opacity:.3;
+  }
+
+  /* Alert --}}
+  .auth-alert-error {
+    display: flex; gap: .7rem;
+    padding: .85rem 1rem;
+    border-radius: 12px;
+    background: rgba(239,68,68,.07);
+    border: 1px solid rgba(239,68,68,.2);
+    color: #fca5a5;
+    font-size: .8rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  .auth-alert-error svg { flex-shrink:0; width:15px; height:15px; margin-top:1px; }
+
+  /* Alert error */
+  .auth-alert-error {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    padding: .75rem 1rem;
+    border-radius: 12px;
+    background: rgba(239,68,68,.07);
+    border: 1px solid rgba(239,68,68,.2);
+    color: #fca5a5;
+    font-size: .8rem;
+    line-height: 1.5;
+  }
+  .auth-alert-icon {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    fill: #fca5a5;
+  }
+  .auth-alert-body p {
+    margin: 0;
+    font-size: .8rem;
+    color: #fca5a5;
+  }
+
+  .auth-input--password {
+    padding-right: 2.75rem;
+  }
+  /* Eye button */
+  .auth-eye-btn {
+    position:absolute; right:.75rem; top:50%;
+    transform:translateY(-50%);
+    background:none; border:none; cursor:pointer;
+    color:var(--color-trigo); opacity:.35;
+    transition:opacity .2s; padding:.2rem;
+    display:flex; align-items:center;
+  }
+  .auth-eye-btn:hover { opacity:.7; }
+  .auth-eye-btn svg { width:16px; height:16px; }
+
+  .logo-light {
+    width: auto;
+    height: 30px;
+    display: block;
+    object-fit: contain;
+  }
