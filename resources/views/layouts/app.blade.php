@@ -69,18 +69,12 @@
         </a>
 
         <span class="app-nav-section app-nav-section--spaced">Reportes</span>
-        <a href="{{ route('admin.exportar.excel') }}" class="app-nav-link">
+        <a href="{{ route('admin.reportes.index') }}"
+           class="app-nav-link {{ request()->routeIs('admin.reportes.*') ? 'is-active' : '' }}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
-            <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+            <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
           </svg>
-          Exportar Excel
-        </a>
-        <a href="{{ route('admin.exportar.pdf') }}" class="app-nav-link">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
-          </svg>
-          Exportar PDF
+          Reportes
         </a>
 
       @else
@@ -100,6 +94,15 @@
           </svg>
           Historial
         </a>
+        <a href="{{ route('panaderia.documentos.index') }}"
+           class="app-nav-link {{ request()->routeIs('panaderia.documentos.*') ? 'is-active' : '' }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Mis documentos
+        </a>
+
+
       @endif
 
     </nav>
@@ -206,5 +209,6 @@
   });
 </script>
 
+@yield('scripts')
 </body>
 </html>

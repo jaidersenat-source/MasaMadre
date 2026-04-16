@@ -45,8 +45,9 @@ class RegistroController extends Controller
     {
         $registro->load([
             'panaderia',
-            'dias'  => fn($q) => $q->orderBy('dia'),
+            'dias'    => fn($q) => $q->orderBy('dia'),
             'panes',
+            'documento',
         ]);
 
         return view('admin.registros.show', compact('registro'));

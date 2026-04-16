@@ -100,6 +100,21 @@
                             {{ $dia->observaciones }}
                         </div>
                         @endif
+
+                        {{-- Galería de fotos (si existen) --}}
+                        @if(!empty($dia->fotos) && is_array($dia->fotos))
+                        <div class="col-span-4 mt-4">
+                            <div class="text-xs text-corteza/50 mb-2">Fotos del Día {{ $dia->dia }}</div>
+                            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                                @foreach($dia->fotos as $foto)
+                                    @php $url = \Illuminate\Support\Facades\Storage::url($foto); @endphp
+                                    <button type="button" class="foto-thumb block rounded-lg overflow-hidden border border-trigo-light" data-full="{{ $url }}">
+                                        <img src="{{ $url }}" alt="Foto día {{ $dia->dia }}" class="w-full h-20 sm:h-24 object-cover">
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -145,4 +160,30 @@
 
 </div>
 
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Crear modal simple
+    const modal = document.createElement('div');
+    modal.id = 'fotoModal';
+    modal.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);z-index:80;padding:2rem;';
+    const img = document.createElement('img');
+    img.style.maxWidth = '100%';
+    img.style.maxHeight = '100%';
+    img.style.borderRadius = '12px';
+    modal.appendChild(img);
+    modal.addEventListener('click', () => modal.style.display = 'none');
+    document.body.appendChild(modal);
+
+    document.querySelectorAll('.foto-thumb').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const src = btn.getAttribute('data-full');
+            img.src = src;
+            modal.style.display = 'flex';
+        });
+    });
+});
+</script>
 @endsection

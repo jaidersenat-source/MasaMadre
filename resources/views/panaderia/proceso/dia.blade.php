@@ -25,9 +25,10 @@
         </div>
     </div>
 
-    <form method="POST"
-          action="{{ route('panaderia.proceso.dia.store', [$proceso->id, $dia]) }}"
-          class="space-y-6">
+        <form method="POST"
+            action="{{ route('panaderia.proceso.dia.store', [$proceso->id, $dia]) }}"
+            class="space-y-6"
+            enctype="multipart/form-data">
         @csrf
 
         {{-- Harinas --}}
@@ -125,6 +126,56 @@
             </div>
         </div>
 
+        @if(in_array($dia, [1,3,5]))
+<div class="card p-6">
+    <div class="flex items-center justify-between mb-1">
+        <h2 class="font-semibold text-corteza">Fotos del proceso</h2>
+        <span class="text-xs font-medium bg-trigo/60 text-corteza-dark px-2 py-0.5 rounded-full">Día {{ $dia }}</span>
+    </div>
+    <p class="text-sm text-corteza/50 mb-5">Mínimo 3 · máximo 6 fotos · JPG o PNG · hasta 5 MB c/u</p>
+
+    {{-- Zona de drop --}}
+    <label id="dropZone"
+           for="fotos_proceso"
+           class="group relative flex flex-col items-center justify-center gap-3 w-full min-h-[160px]
+                  border-2 border-dashed border-trigo hover:border-corteza/40
+                  rounded-2xl cursor-pointer transition-all duration-200
+                  bg-trigo/10 hover:bg-trigo/20">
+
+        {{-- Icono cámara --}}
+        <div class="w-12 h-12 rounded-xl bg-trigo/60 flex items-center justify-center
+                    group-hover:scale-110 transition-transform duration-200">
+            <svg class="w-6 h-6 text-corteza/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+        </div>
+
+        <div class="text-center">
+            <p class="text-sm font-medium text-corteza">Arrastra fotos aquí</p>
+            <p class="text-xs text-corteza/40 mt-0.5">o haz clic para seleccionar</p>
+        </div>
+
+        <input type="file" id="fotos_proceso" name="fotos_proceso[]"
+               multiple accept="image/*" class="sr-only" />
+    </label>
+
+    {{-- Errores --}}
+    @error('fotos_proceso') <p class="text-red-500 text-xs mt-2">{{ $message }}</p> @enderror
+    @error('fotos_proceso.*') <p class="text-red-500 text-xs mt-2">{{ $message }}</p> @enderror
+
+    {{-- Contador + previews --}}
+    <div class="mt-4 space-y-3">
+        <p id="fotosHelp" class="text-xs text-corteza/40">0 archivos seleccionados</p>
+
+        {{-- Grid de previews --}}
+        <div id="fotosPreview" class="grid grid-cols-3 gap-2 hidden"></div>
+    </div>
+</div>
+@endif
+
         <div class="flex justify-end">
             <button type="submit" class="btn-verde">
                 {{ $dia < 5 ? "Guardar y continuar al Día " . ($dia + 1) : 'Guardar Día 5' }}
@@ -136,4 +187,83 @@
     </form>
 </div>
 
+@section('scripts')
+@if(in_array($dia, [1,3,5]))
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const input    = document.getElementById('fotos_proceso');
+    const help     = document.getElementById('fotosHelp');
+    const preview  = document.getElementById('fotosPreview');
+    const dropZone = document.getElementById('dropZone');
+    const form     = input?.closest('form');
+    if (!input || !help || !form) return;
+
+    // Drag & drop visual feedback
+    ['dragenter','dragover'].forEach(ev =>
+        dropZone.addEventListener(ev, e => {
+            e.preventDefault();
+            dropZone.classList.add('border-corteza/60', 'bg-trigo/30');
+        })
+    );
+    ['dragleave','drop'].forEach(ev =>
+        dropZone.addEventListener(ev, e => {
+            e.preventDefault();
+            dropZone.classList.remove('border-corteza/60', 'bg-trigo/30');
+        })
+    );
+    dropZone.addEventListener('drop', e => {
+        const dt = new DataTransfer();
+        Array.from(e.dataTransfer.files).forEach(f => dt.items.add(f));
+        input.files = dt.files;
+        renderPreview();
+    });
+
+    input.addEventListener('change', renderPreview);
+
+    function renderPreview() {
+        const files = Array.from(input.files);
+        const n = files.length;
+
+        // Contador con color según validez
+        help.textContent = `${n} archivo${n !== 1 ? 's' : ''} seleccionado${n !== 1 ? 's' : ''}`;
+        help.className = n >= 3 && n <= 6
+            ? 'text-xs text-green-600 font-medium'
+            : 'text-xs text-red-500 font-medium';
+
+        // Previews
+        preview.innerHTML = '';
+        if (n === 0) { preview.classList.add('hidden'); return; }
+        preview.classList.remove('hidden');
+
+        files.forEach((file, i) => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const wrap = document.createElement('div');
+                wrap.className = 'relative aspect-square rounded-xl overflow-hidden bg-trigo/20 ring-1 ring-corteza/10';
+                wrap.innerHTML = `
+                    <img src="${e.target.result}"
+                         class="w-full h-full object-cover"
+                         alt="Foto ${i+1}">
+                    <span class="absolute bottom-1 right-1 bg-corteza/70 text-white text-[10px] rounded px-1">${i+1}</span>
+                `;
+                preview.appendChild(wrap);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    form.addEventListener('submit', function (e) {
+        const n = input.files.length;
+        if (n < 3) {
+            e.preventDefault();
+            alert('Debes seleccionar al menos 3 fotos para el Día {{ $dia }}.');
+        } else if (n > 6) {
+            e.preventDefault();
+            alert('Puedes subir como máximo 6 fotos.');
+        }
+    });
+});
+</script>
+@endif
+@endsection
 @endsection

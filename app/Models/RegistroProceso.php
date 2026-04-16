@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class RegistroProceso extends Model
 {
@@ -88,5 +89,16 @@ public function scopePorRegional($query, string $regional)
 {
     return $query->whereHas('panaderia', fn($q) => $q->where('regional', $regional));
 } 
+
+public function documento(): HasOne
+    {
+        return $this->hasOne(RegistroDocumento::class, 'registro_id')
+                    ->withDefault(); // si no existe, devuelve modelo vacío (no null)
+    }
+
+       public function porcentajeDocumentos(): int
+    {
+        return $this->documento->porcentajeCompletitud();
+    }
 
 }

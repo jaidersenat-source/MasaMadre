@@ -27,6 +27,10 @@
            class="btn-secondary text-xs w-full sm:w-auto justify-center">
             Exportar PDF
         </a>
+        <a href="{{ route('admin.exportar.proceso.excel', ['proceso_id' => $registro->id]) }}"
+           class="btn-secondary text-xs w-full sm:w-auto justify-center">
+            Exportar Excel (formato informe)
+        </a>
     </div>
 </div>
 
@@ -254,5 +258,226 @@
     </div>
 </div>
 @endforeach
+
+{{-- ══ Documentos y fotos ══════════════════════════════════════ --}}
+@php $doc = $registro->documento; @endphp
+@if($doc)
+@php
+    $tieneCaract = $registro->panaderia->tieneCaracterizacion();
+    $resumen     = $doc->resumenEstado($tieneCaract);
+    $pct         = $doc->porcentajeCompletitud($tieneCaract);
+@endphp
+<div class="card overflow-hidden mb-6 mt-6">
+    <div class="px-6 py-4 border-b border-trigo-light/50 flex items-center justify-between">
+        <div>
+            <h2 class="font-semibold text-corteza">Documentos y soportes</h2>
+            <p class="text-xs text-corteza/40 mt-0.5">{{ $doc->totalCompletados($tieneCaract) }}/6 elementos completados</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="w-24 h-2 bg-masa-dark rounded-full overflow-hidden">
+                <div class="h-full rounded-full {{ $pct === 100 ? 'bg-verde' : ($pct >= 50 ? 'bg-trigo' : 'bg-red-300') }}"
+                     style="width: {{ $pct }}%"></div>
+            </div>
+            <span class="text-xs font-semibold tabular-nums {{ $pct === 100 ? 'text-verde' : ($pct >= 50 ? 'text-trigo-dark' : 'text-red-400') }}">
+                {{ $pct }}%
+            </span>
+        </div>
+    </div>
+
+    <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        @foreach($resumen as $clave => $item)
+        <div class="flex items-start gap-3 p-3 rounded-xl
+            {{ $item['completo'] ? 'bg-verde-light/40' : 'bg-masa/50' }}">
+
+            {{-- Indicador --}}
+            <div class="shrink-0 mt-0.5">
+                @if($item['completo'])
+                    <div class="w-6 h-6 rounded-full bg-verde/20 flex items-center justify-center">
+                        <svg class="w-3.5 h-3.5 text-verde" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                @else
+                    <div class="w-6 h-6 rounded-full bg-corteza/8 flex items-center justify-center">
+                        <div class="w-2 h-2 rounded-full bg-corteza/20"></div>
+                    </div>
+                @endif
+            </div>
+
+            <div class="min-w-0 flex-1">
+                <div class="text-xs font-medium text-corteza leading-tight">{{ $item['label'] }}</div>
+                @if($item['completo'] && !empty($item['fecha']))
+                    <div class="text-[10px] text-corteza/40 mt-0.5">
+                        {{ \Carbon\Carbon::parse($item['fecha'])->format('d/m/Y H:i') }}
+                    </div>
+                @elseif(!$item['completo'])
+                    <div class="text-[10px] text-corteza/30 mt-0.5">Pendiente</div>
+                @endif
+
+                @if($item['completo'])
+                    {{-- Actas: descargar PDF --}}
+                    @if(in_array($clave, ['acta_basica', 'acta_especializada']) && !empty($item['url']))
+                        <a href="{{ $item['url'] }}" target="_blank"
+                           class="inline-flex items-center gap-1 text-[11px] text-trigo-dark hover:text-corteza
+                                  transition-colors mt-1.5 font-medium">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                            </svg>
+                            Descargar PDF
+                        </a>
+                    @endif
+                    {{-- Foto individual: pH / cloro --}}
+                    @if(in_array($clave, ['foto_ph', 'foto_cloro']) && !empty($item['url']))
+                        <button type="button"
+                                onclick="abrirFotoReg('{{ $item['url'] }}', '{{ $item['label'] }}')"
+                                class="inline-flex items-center gap-1 text-[11px] text-trigo-dark hover:text-corteza
+                                       transition-colors mt-1.5 font-medium">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                            Ver foto
+                        </button>
+                    @endif
+                    {{-- Galería de fotos del proceso --}}
+                    @if($clave === 'fotos_proceso' && !empty($item['urls']))
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            @foreach($item['urls'] as $i => $url)
+                            <button type="button"
+                                    onclick="abrirGaleriaReg({{ json_encode($item['urls']) }}, {{ $i }})"
+                                    class="relative w-14 h-14 rounded-lg overflow-hidden border-2 border-white
+                                           shadow-sm hover:scale-105 transition-transform">
+                                <img src="{{ $url }}" alt="Foto proceso {{ $i+1 }}"
+                                     class="w-full h-full object-cover">
+                            </button>
+                            @endforeach
+                        </div>
+                    @endif
+                @endif
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
+{{-- ══ MODAL foto individual ══════════════════════════════════════ --}}
+<div id="modal-foto-reg"
+     class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+     role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-corteza/75 backdrop-blur-sm" onclick="cerrarFotoReg()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-trigo-light/50">
+            <span id="modal-foto-reg-titulo" class="font-medium text-corteza text-sm"></span>
+            <button onclick="cerrarFotoReg()"
+                    class="w-7 h-7 rounded-lg hover:bg-masa flex items-center justify-center
+                           text-corteza/40 hover:text-corteza transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <img id="modal-foto-reg-img" src="" alt="" class="w-full object-contain max-h-[70vh]">
+    </div>
+</div>
+
+{{-- ══ MODAL galería proceso ══════════════════════════════════════ --}}
+<div id="modal-galeria-reg"
+     class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+     role="dialog" aria-modal="true">
+    <div class="absolute inset-0 bg-corteza/75 backdrop-blur-sm" onclick="cerrarGaleriaReg()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-trigo-light/50">
+            <span class="font-medium text-corteza text-sm">
+                Fotos del proceso
+                <span id="galeria-reg-contador" class="font-normal text-corteza/40 ml-1 tabular-nums"></span>
+            </span>
+            <button onclick="cerrarGaleriaReg()"
+                    class="w-7 h-7 rounded-lg hover:bg-masa flex items-center justify-center
+                           text-corteza/40 hover:text-corteza transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="relative bg-corteza/5">
+            <img id="galeria-reg-img" src="" alt="" class="w-full object-contain max-h-[55vh]">
+            <button onclick="galeriaRegAnterior()"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full
+                           bg-white/90 hover:bg-white shadow-md flex items-center justify-center
+                           transition-all hover:scale-105">
+                <svg class="w-4 h-4 text-corteza" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <button onclick="galeriaRegSiguiente()"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full
+                           bg-white/90 hover:bg-white shadow-md flex items-center justify-center
+                           transition-all hover:scale-105">
+                <svg class="w-4 h-4 text-corteza" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+        </div>
+        <div id="galeria-reg-thumbs"
+             class="flex gap-2 overflow-x-auto px-4 py-3 border-t border-trigo-light/40">
+        </div>
+    </div>
+</div>
+
+@section('scripts')
+<script>
+// ── Modal foto individual ─────────────────────────────────────────
+function abrirFotoReg(url, titulo) {
+    document.getElementById('modal-foto-reg-titulo').textContent = titulo;
+    document.getElementById('modal-foto-reg-img').src = url;
+    const m = document.getElementById('modal-foto-reg');
+    m.classList.remove('hidden'); m.classList.add('flex');
+}
+function cerrarFotoReg() {
+    const m = document.getElementById('modal-foto-reg');
+    m.classList.remove('flex'); m.classList.add('hidden');
+}
+
+// ── Galería de fotos del proceso ──────────────────────────────────
+let _regUrls = [], _regIdx = 0;
+
+function abrirGaleriaReg(urls, inicio) {
+    _regUrls = urls; _regIdx = inicio || 0;
+    renderGaleriaReg();
+    const m = document.getElementById('modal-galeria-reg');
+    m.classList.remove('hidden'); m.classList.add('flex');
+}
+function cerrarGaleriaReg() {
+    const m = document.getElementById('modal-galeria-reg');
+    m.classList.remove('flex'); m.classList.add('hidden');
+}
+function galeriaRegAnterior() {
+    _regIdx = (_regIdx - 1 + _regUrls.length) % _regUrls.length;
+    renderGaleriaReg();
+}
+function galeriaRegSiguiente() {
+    _regIdx = (_regIdx + 1) % _regUrls.length;
+    renderGaleriaReg();
+}
+function renderGaleriaReg() {
+    document.getElementById('galeria-reg-img').src = _regUrls[_regIdx];
+    document.getElementById('galeria-reg-contador').textContent =
+        (_regIdx + 1) + ' / ' + _regUrls.length;
+    const thumbs = document.getElementById('galeria-reg-thumbs');
+    thumbs.innerHTML = '';
+    _regUrls.forEach((u, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'shrink-0 w-12 h-12 rounded-lg overflow-hidden border-2 transition-all '
+            + (i === _regIdx ? 'border-corteza scale-110' : 'border-transparent opacity-60 hover:opacity-100');
+        btn.onclick = () => { _regIdx = i; renderGaleriaReg(); };
+        btn.innerHTML = '<img src="' + u + '" class="w-full h-full object-cover">';
+        thumbs.appendChild(btn);
+    });
+    thumbs.children[_regIdx]?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+}
+</script>
+@endsection
 
 @endsection

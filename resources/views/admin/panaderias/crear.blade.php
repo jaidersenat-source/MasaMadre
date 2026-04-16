@@ -80,10 +80,22 @@
 
                 <div>
                     <label class="label">Centro de formación</label>
-                    <input type="text" name="centro_formacion" value="{{ old('centro_formacion') }}"
-                           placeholder="CENTRO DE LA INDUSTRIA, LA EMPRESA Y LOS SERVICIOS"
-                           class="input @error('centro_formacion') border-red-400 @enderror">
+                    <select name="centro_formacion" id="centro_select"
+                            class="input @error('centro_formacion') border-red-400 @enderror">
+                        <option value="">Selecciona un centro</option>
+                        @if(old('regional') && old('centro_formacion'))
+                            <option selected value="{{ old('centro_formacion') }}">{{ old('centro_formacion') }}</option>
+                        @endif
+                    </select>
                     @error('centro_formacion') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="label">Codigo</label>
+                    <input type="text" name="codigo" id="codigo_input" value="{{ old('codigo') }}"
+                           placeholder="Código del centro de formación"
+                           class="input @error('codigo') border-red-400 @enderror" readonly>
+                    @error('codigo') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
@@ -92,9 +104,16 @@
                            placeholder="APELLIDO NOMBRE COMPLETO"
                            class="input @error('extensionista') border-red-400 @enderror">
                     @error('extensionista') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+
+                    <label class="label mt-2">Cedula</label>
+                    <input type="text" name="extensionista_cedula" value="{{ old('extensionista_cedula') }}"
+                           placeholder="Número de cédula"
+                           class="input @error('extensionista_cedula') border-red-400 @enderror">
+                    @error('extensionista_cedula') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
         </div>
+
 
         {{-- Datos de acceso --}}
         <div class="card p-6">
@@ -153,4 +172,60 @@
     </form>
 </div>
 
+@endsection
+
+@section('scripts')
+<script>
+    (function(){
+        const regionalSelect = document.querySelector('select[name="regional"]');
+        const centroSelect = document.getElementById('centro_select');
+        const codigoInput = document.getElementById('codigo_input');
+
+        function clearCentros(){
+            centroSelect.innerHTML = '<option value="">Selecciona un centro</option>';
+            codigoInput.value = '';
+        }
+
+        async function fetchCentros(regional){
+            if(!regional) return clearCentros();
+            try{
+                const res = await fetch("{{ url('/admin/centros') }}?regional=" + encodeURIComponent(regional));
+                if(!res.ok) return clearCentros();
+                const data = await res.json();
+                clearCentros();
+                data.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.nombre;
+                    opt.textContent = c.nombre + ' — ' + c.codigo;
+                    opt.dataset.codigo = c.codigo;
+                    centroSelect.appendChild(opt);
+                });
+            }catch(e){
+                console.error(e);
+                clearCentros();
+            }
+        }
+
+        regionalSelect?.addEventListener('change', function(){
+            const val = this.value;
+            // la lista de regionales en controller usa mayúsculas con guiones bajos en algunos
+            fetchCentros(val);
+        });
+
+        centroSelect?.addEventListener('change', function(){
+            const sel = this.selectedOptions[0];
+            if(sel && sel.dataset && sel.dataset.codigo){
+                codigoInput.value = sel.dataset.codigo;
+            } else {
+                codigoInput.value = '';
+            }
+        });
+
+        // Si hay una regional ya seleccionada al cargar la página, precargar centros
+        document.addEventListener('DOMContentLoaded', function(){
+            const r = regionalSelect?.value;
+            if(r) fetchCentros(r);
+        });
+    })();
+</script>
 @endsection

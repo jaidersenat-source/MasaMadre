@@ -12,6 +12,11 @@ class DiaMasaMadre extends Model
         'registro_id', 'dia', 'pct_harina_trigo', 'otras_harinas',
         'pct_agua', 'temp_agua', 'temp_ambiente', 'temp_mezcla',
         'ph_inicial', 'tiempo_maduracion_horas', 'observaciones', 'responsable',
+        'fotos',
+    ];
+
+    protected $casts = [
+        'fotos' => 'array',
     ];
 
     public function registro()

@@ -23,19 +23,7 @@
 
   {{-- Acciones --}}
   <div class="flex flex-wrap items-center gap-2">
-    <a href="{{ route('admin.exportar.excel') }}" class="adm-btn adm-btn-ghost">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
-        <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
-      </svg>
-      Excel
-    </a>
-    <a href="{{ route('admin.exportar.pdf') }}" class="adm-btn adm-btn-ghost">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
-      </svg>
-      PDF
-    </a>
+   
     <a href="{{ route('admin.panaderias.create') }}" class="adm-btn adm-btn-primary">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -304,6 +292,124 @@
       <div class="flex justify-between mt-1.5">
         <span class="font-mono text-xs progreso-barra-label">0</span>
         <span class="font-mono text-xs progreso-barra-label">{{ $stats['total_panaderias'] }} panaderías</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{{-- ── SECCIÓN CARACTERIZACIÓN ── --}}
+<div class="mt-6">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h2 class="font-semibold text-sm tabla-titulo">Caracterización de panaderías</h2>
+      <p class="text-xs mt-0.5 tabla-subtitulo">
+        {{ $statsCaract['total'] }} panaderías con caracterización completada
+      </p>
+    </div>
+    <a href="{{ route('admin.exportar.caracterizaciones') }}" class="adm-btn adm-btn-ghost">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="12" y1="18" x2="12" y2="12"/>
+        <line x1="9" y1="15" x2="15" y2="15"/>
+      </svg>
+      Exportar Excel
+    </a>
+  </div>
+
+  {{-- Tarjetas clave --}}
+  <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
+    @php
+    $caracTarjetas = [
+      ['Caracterizadas',          $statsCaract['total'],           'metric-value-corteza'],
+      ['Usan masa madre',         $statsCaract['usan_masa_madre'],  'metric-value-verde'],
+      ['Formalizadas',            $statsCaract['formalizadas'],     'metric-value-amber'],
+      ['Recibieron transferencia',$statsCaract['recibio_transfer'], 'metric-value-blue'],
+    ];
+    @endphp
+    @foreach($caracTarjetas as [$lbl, $val, $cls])
+    <div class="adm-card p-4 flex items-center gap-3">
+      <div>
+        <div class="adm-metric-label">{{ $lbl }}</div>
+        <div class="adm-metric-value {{ $cls }}">{{ $val }}</div>
+        @if($statsCaract['total'] > 0)
+          <div class="adm-metric-sub metric-sub-verde-dim">
+            {{ round($val / max($statsCaract['total'], 1) * 100) }}%
+          </div>
+        @endif
+      </div>
+    </div>
+    @endforeach
+  </div>
+
+  {{-- Situación económica + zona --}}
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+
+    {{-- Situación económica --}}
+    <div class="adm-card p-5">
+      <h3 class="font-semibold text-sm tabla-titulo mb-4">Situación económica</h3>
+      @php
+      $coloresSit = ['Muy difícil'=>'bg-red-400','Difícil'=>'bg-amber-400','Estable'=>'bg-trigo','Buena'=>'bg-verde'];
+      $maxSit = max(1, $statsCaract['situacion_economica']->max() ?? 1);
+      @endphp
+      <div class="space-y-2.5">
+        @foreach($coloresSit as $etiqueta => $color)
+          @php $n = $statsCaract['situacion_economica'][$etiqueta] ?? 0; @endphp
+          <div class="flex items-center gap-3 text-xs">
+            <span class="w-20 text-right text-corteza/60 shrink-0">{{ $etiqueta }}</span>
+            <div class="flex-1 h-5 bg-masa-dark rounded-full overflow-hidden">
+              <div class="{{ $color }} h-full rounded-full transition-all"
+                   style="width:{{ round($n / $maxSit * 100) }}%"></div>
+            </div>
+            <span class="w-6 text-left font-mono font-semibold text-corteza">{{ $n }}</span>
+          </div>
+        @endforeach
+      </div>
+    </div>
+
+    {{-- Zona + promedios --}}
+    <div class="adm-card p-5">
+      <h3 class="font-semibold text-sm tabla-titulo mb-4">Zona y promedios</h3>
+
+      {{-- Zona --}}
+      @php $totalZona = max(1, ($statsCaract['zona']['Urbana'] ?? 0) + ($statsCaract['zona']['Rural'] ?? 0)); @endphp
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xs text-corteza/50 w-12 shrink-0">Urbana</span>
+        <div class="flex-1 h-4 bg-masa-dark rounded-full overflow-hidden flex">
+          <div class="bg-trigo h-full transition-all"
+               style="width:{{ round(($statsCaract['zona']['Urbana'] ?? 0) / $totalZona * 100) }}%"></div>
+        </div>
+        <span class="text-xs font-mono text-corteza w-6">{{ $statsCaract['zona']['Urbana'] ?? 0 }}</span>
+      </div>
+      <div class="flex items-center gap-2 mb-5">
+        <span class="text-xs text-corteza/50 w-12 shrink-0">Rural</span>
+        <div class="flex-1 h-4 bg-masa-dark rounded-full overflow-hidden flex">
+          <div class="bg-verde h-full transition-all"
+               style="width:{{ round(($statsCaract['zona']['Rural'] ?? 0) / $totalZona * 100) }}%"></div>
+        </div>
+        <span class="text-xs font-mono text-corteza w-6">{{ $statsCaract['zona']['Rural'] ?? 0 }}</span>
+      </div>
+
+      {{-- Promedios --}}
+      <div class="grid grid-cols-2 gap-3 pt-4 border-t border-trigo-light/40">
+        <div class="text-center">
+          <div class="font-display text-2xl font-bold text-corteza tabular-nums">
+            {{ $statsCaract['avg_empleados'] }}
+          </div>
+          <div class="text-[10px] text-corteza/40 uppercase tracking-wide mt-0.5">
+            Prom. empleados
+          </div>
+        </div>
+        <div class="text-center">
+          <div class="font-display text-2xl font-bold text-corteza tabular-nums">
+            {{ $statsCaract['avg_kilos_harina'] }}
+          </div>
+          <div class="text-[10px] text-corteza/40 uppercase tracking-wide mt-0.5">
+            Prom. kg harina/día
+          </div>
+        </div>
       </div>
     </div>
 

@@ -56,7 +56,9 @@ class PanaderiaController extends Controller
                 'direccion'        => $request->direccion,
                 'regional'         => $request->regional,
                 'centro_formacion' => $request->centro_formacion,
+                'codigo'           => $request->codigo,
                 'extensionista'    => strtoupper($request->extensionista),
+                'extensionista_cedula' => $request->extensionista_cedula,
                 'activa'           => true,
             ]);
 
@@ -76,22 +78,38 @@ class PanaderiaController extends Controller
     }
 
     // Ver detalle de una panadería
-    public function show(Panaderia $panaderia)
+     public function show(Panaderia $panaderia)
     {
-        $panaderia->load([
-            'users',
-            'registros' => fn($q) => $q->withCount(['dias', 'panes'])->latest('fecha_inicio'),
+       $panaderia->load([
+    'users',
+    'caracterizacion',                          // ← NUEVO
+    'registros' => fn($q) => $q
+        ->withCount(['dias', 'panes'])
+        ->with('documento')
+        ->latest('fecha_inicio'),
         ]);
-
+ 
         $stats = [
-            'total_procesos'    => $panaderia->registros->count(),
-            'procesos_activos'  => $panaderia->registros->where('estado', 'en_proceso')->count(),
+            'total_procesos'     => $panaderia->registros->count(),
+            'procesos_activos'   => $panaderia->registros->where('estado', 'en_proceso')->count(),
             'procesos_completos' => $panaderia->registros->where('estado', 'completado')->count(),
+ 
+            // ── NUEVO: resumen de documentos de todos los procesos ──
+            // Cuántos procesos tienen los 6 ítems al 100%
+            'procesos_documentacion_completa' => $panaderia->registros
+                ->filter(fn($r) => $r->documento->porcentajeCompletitud() === 100)
+                ->count(),
+ 
+            // Porcentaje promedio de documentación entre todos los procesos
+            'documentacion_promedio' => $panaderia->registros->count() > 0
+                ? (int) round(
+                    $panaderia->registros->avg(fn($r) => $r->documento->porcentajeCompletitud())
+                  )
+                : 0,
         ];
-
+ 
         return view('admin.panaderias.show', compact('panaderia', 'stats'));
     }
-
     // Formulario de edición
     public function edit(Panaderia $panaderia)
     {
@@ -110,7 +128,9 @@ class PanaderiaController extends Controller
                 'direccion'        => $request->direccion,
                 'regional'         => $request->regional,
                 'centro_formacion' => $request->centro_formacion,
+                'codigo'           => $request->codigo,
                 'extensionista'    => strtoupper($request->extensionista),
+                'extensionista_cedula' => $request->extensionista_cedula,
                 'activa'           => $request->boolean('activa'),
             ]);
 
@@ -182,5 +202,18 @@ class PanaderiaController extends Controller
             'VICHADA',
             'DISTRITO_CAPITAL',
         ];
+    }
+
+    // Devuelve lista de centros para una regional (JSON)
+    public function centros(Request $request)
+    {
+        $regional = $request->query('regional');
+        if (!$regional) {
+            return response()->json([], 400);
+        }
+
+        $centros = config('centros.' . strtoupper($regional), []);
+
+        return response()->json(array_values($centros));
     }
 }

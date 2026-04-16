@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Exports\RegistrosExport;
+use App\Exports\CaracterizacionesExport;
+use App\Exports\ProcesoExcelExport;
 use App\Http\Controllers\Controller;
 use App\Models\RegistroProceso;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -52,4 +54,38 @@ class ExportController extends Controller
 
         return $pdf->download($nombre);
     }
+
+    // Exportar un proceso individual a XLSX usando la vista del PDF
+    public function procesoExcel(Request $request)
+    {
+        $procesoId = $request->query('proceso_id') ?? $request->query('proceso');
+        $registro = RegistroProceso::with([
+            'panaderia',
+            'dias'  => fn($q) => $q->orderBy('dia'),
+            'panes',
+        ])->findOrFail($procesoId);
+
+        $nombre = 'reporte_proceso_' . $registro->id . '_' . now()->format('Ymd_His') . '.xlsx';
+
+        return (new ProcesoExcelExport($registro))->download($nombre);
+    }
+
+    
+// Exportar solo caracterizaciones
+public function caracterizaciones(Request $request)
+{
+    $filtros = $request->only(['panaderia_id']);
+    $nombre  = 'caracterizaciones_' . now()->format('Ymd_His') . '.xlsx';
+
+    return Excel::download(new RegistrosExport($filtros), $nombre);
+}
+
+// Exportar caracterización en archivo separado (solo hoja de caracterizaciones)
+public function caracterizacionUnica(Request $request)
+{
+    $filtros = $request->only(['panaderia_id']);
+    $nombre  = 'caracterizacion_' . now()->format('Ymd_His') . '.xlsx';
+
+    return (new CaracterizacionesExport($filtros))->download($nombre);
+}
 }

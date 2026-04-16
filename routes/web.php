@@ -10,7 +10,10 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\PanaderiaController;
 use App\Http\Controllers\Admin\RegistroController;
 use App\Http\Controllers\Admin\ExportController;
+use App\Http\Controllers\Admin\ReportesController;
 use App\Http\Controllers\PerfilController;
+use App\Http\Controllers\Panaderia\DocumentoController;
+use App\Http\Controllers\Panaderia\CaracterizacionController;
 
 // Pública
 Route::get('/', fn() => view('welcome'))->name('home');
@@ -29,11 +32,17 @@ Route::middleware('auth')->prefix('perfil')->name('perfil.')->group(function () 
     Route::patch('/password', [PerfilController::class, 'updatePassword'])->name('password');
 });
 
+
+
 // ─── Panel panadería ───────────────────────────────────────────────────────
 Route::middleware(['auth', 'role:panaderia'])
     ->prefix('panaderia')
     ->name('panaderia.')
     ->group(function () {
+
+        // Caracterización inicial (nuevo ingreso)
+        Route::get('/caracterizacion',  [CaracterizacionController::class, 'show'])->name('caracterizacion.show');
+        Route::post('/caracterizacion', [CaracterizacionController::class, 'store'])->name('caracterizacion.store');
 
         // Dashboard
         Route::get('/dashboard', [PanaderiaDashboard::class, 'index'])->name('dashboard');
@@ -58,6 +67,31 @@ Route::middleware(['auth', 'role:panaderia'])
         });
     });
 
+    Route::middleware(['auth','role:panaderia'])
+    ->prefix('panaderia/proceso/{proceso}/documentos')
+    ->name('panaderia.proceso.documentos.')
+    ->group(function () {
+ 
+        
+        Route::get('/acta/{tipo}/descargar', [DocumentoController::class, 'descargarActa'])
+            ->name('acta.descargar')
+            ->where('tipo', 'basica|especializada');
+ 
+        Route::post('/acta/{tipo}', [DocumentoController::class, 'subirActa'])
+            ->name('acta.subir')
+            ->where('tipo', 'basica|especializada');
+ 
+        
+        Route::post('/foto/{tipo}', [DocumentoController::class, 'subirFotoMedicion'])
+            ->name('foto.subir')
+            ->where('tipo', 'ph|cloro');
+ 
+        
+        Route::post('/fotos-proceso', [DocumentoController::class, 'subirFotosProceso'])
+            ->name('fotos_proceso.subir');
+    });
+ 
+
 // ─── Panel admin ───────────────────────────────────────────────────────────
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
@@ -70,6 +104,7 @@ Route::middleware(['auth', 'role:admin'])
         // Gestión de panaderías
         Route::resource('panaderias', PanaderiaController::class)
             ->except(['destroy']);
+        Route::get('/centros', [PanaderiaController::class, 'centros'])->name('panaderias.centros');
         Route::patch('/panaderias/{panaderia}/estado', [PanaderiaController::class, 'toggleEstado'])
             ->name('panaderias.estado');
 
@@ -80,7 +115,25 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/registros',          [RegistroController::class, 'index'])->name('registros.index');
         Route::get('/registros/{registro}', [RegistroController::class, 'show'])->name('registros.show');
 
+        // Reportes
+        Route::get('/reportes', [ReportesController::class, 'index'])->name('reportes.index');
+
         // Exportaciones
         Route::get('/exportar/excel', [ExportController::class, 'excel'])->name('exportar.excel');
         Route::get('/exportar/pdf',   [ExportController::class, 'pdf'])->name('exportar.pdf');
+
+        Route::get('/exportar/caracterizaciones', [ExportController::class, 'caracterizaciones'])
+    ->name('exportar.caracterizaciones');
+        Route::get('/exportar/proceso/excel', [ExportController::class, 'procesoExcel'])
+            ->name('exportar.proceso.excel');
+        // Exportar caracterización en un archivo único (solo P1–P51)
+        Route::get('/exportar/caracterizacion', [ExportController::class, 'caracterizacionUnica'])
+            ->name('exportar.caracterizacion');
+    });
+
+    Route::middleware(['auth', 'role:panaderia'])
+    ->prefix('panaderia/documentos')
+    ->name('panaderia.documentos.')
+    ->group(function () {
+        Route::get('/', [DocumentoController::class, 'index'])->name('index');
     });
